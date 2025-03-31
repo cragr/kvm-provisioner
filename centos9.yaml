@@ -3,7 +3,7 @@
   hosts: kvm_host
   become: true
   vars:
-    vm_network: default
+    vm_bridge: bridge0
     ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMtnq6htWpWwMEIBRzD4k5YRj/aC+SIzu6MsRg1VKIhe"
     centos_image_url: "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"
     
@@ -94,8 +94,8 @@
                 <target dev='hdc' bus='ide'/>
                 <readonly/>
               </disk>
-              <interface type='network'>
-                <source network='{{ vm_network }}'/>
+              <interface type='bridge'>
+                <source bridge='{{ vm_bridge }}'/>
                 <model type='virtio'/>
               </interface>
               <console type='pty'>
