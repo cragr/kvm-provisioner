@@ -8,6 +8,14 @@
     centos_image_url: "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"
     
   tasks:
+    - name: Install required packages
+      ansible.builtin.dnf:
+        name:
+          - xorriso
+          - qemu-img
+          - libvirt-client
+        state: present
+  
     - name: Create VM directory
       ansible.builtin.file:
         path: "/mnt/nvme_storage/{{ vm_name }}"
@@ -50,7 +58,7 @@
       
     - name: Generate cloud-init ISO
       ansible.builtin.command: >
-        genisoimage -output /mnt/nvme_storage/{{ vm_name }}/cloud-init.iso
+        xorriso -as mkisofs -output /mnt/nvme_storage/{{ vm_name }}/cloud-init.iso
         -volid cidata -joliet -rock
         /mnt/nvme_storage/{{ vm_name }}/userdata.yaml
         /mnt/nvme_storage/{{ vm_name }}/metadata.yaml
