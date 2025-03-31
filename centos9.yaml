@@ -9,20 +9,20 @@
     
   tasks:
     - name: Create VM directory
-      file:
+      ansible.builtin.file:
         path: "/mnt/nvme_storage/{{ vm_name }}"
         state: directory
         mode: '0755'
       
     - name: Download CentOS 9 cloud image
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ centos_image_url }}"
         dest: "/mnt/nvme_storage/{{ vm_name }}/{{ vm_name }}.qcow2"
         mode: '0644'
       register: image_download
       
     - name: Resize disk image
-      command: "qemu-img resize /mnt/nvme_storage/{{ vm_name }}/{{ vm_name }}.qcow2 {{ vm_disk_size_gb }}G"
+      ansible.builtin.command: "qemu-img resize /mnt/nvme_storage/{{ vm_name }}/{{ vm_name }}.qcow2 {{ vm_disk_size_gb }}G"
       when: image_download.changed
       
     - name: Create cloud-init metadata file
@@ -34,7 +34,7 @@
         mode: '0644'
       
     - name: Create cloud-init userdata file with SSH key
-      copy:
+      ansible.builtin.copy:
         dest: "/mnt/nvme_storage/{{ vm_name }}/userdata.yaml"
         content: |
           #cloud-config
@@ -49,14 +49,14 @@
         mode: '0644'
       
     - name: Generate cloud-init ISO
-      command: >
+      ansible.builtin.command: >
         genisoimage -output /mnt/nvme_storage/{{ vm_name }}/cloud-init.iso
         -volid cidata -joliet -rock
         /mnt/nvme_storage/{{ vm_name }}/userdata.yaml
         /mnt/nvme_storage/{{ vm_name }}/metadata.yaml
       
     - name: Define VM
-      virt:
+      community.libvirt.virt:
         name: "{{ vm_name }}"
         command: define
         xml: |
@@ -99,12 +99,12 @@
           </domain>
       
     - name: Start VM
-      virt:
+      community.libvirt.virt:
         name: "{{ vm_name }}"
         state: running
       
     - name: Get VM IP address
-      shell: |
+      ansible.builtin.shell: |
         virsh domifaddr {{ vm_name }} | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}'
       register: vm_ip_result
       retries: 60
@@ -113,5 +113,5 @@
       changed_when: false
       
     - name: Display VM IP address
-      debug:
+      ansible.builtin.debug:
         msg: "CentOS 9 VM created with IP: {{ vm_ip_result.stdout }}"
